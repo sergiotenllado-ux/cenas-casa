@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cenas en casa</title>
+<meta name="description" content="Menú de cenas semanal con Thermomix TM31 y lista de la compra">
+<meta name="theme-color" content="#2f6b4f">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
+<style>
+:root{
+  --bg:#f7f5f0;--card:#ffffff;--ink:#1f2421;--muted:#6b716d;--line:#e4e0d6;
+  --accent:#2f6b4f;--accent-soft:#e3efe8;--today:#fff4dc;--today-line:#e9c46a;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#141816;--card:#1d2320;--ink:#e9ece9;--muted:#9aa39d;--line:#2c3430;
+    --accent:#7cc7a0;--accent-soft:#22332a;--today:#2f2a1c;--today-line:#a8873a;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:20px 16px 8px;max-width:760px;margin:0 auto}
+h1{margin:0;font-size:1.6rem}
+.sub{color:var(--muted);font-size:.9rem}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .wrap{max-width:760px;margin:0 auto;display:flex;gap:4px;padding:8px 16px}
+nav button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;padding:10px 6px;border-radius:10px;cursor:pointer}
+nav button.on{background:var(--accent-soft);color:var(--accent)}
+main{max-width:760px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.card.today{background:var(--today);border-color:var(--today-line)}
+.tag{display:inline-block;font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-right:6px}
+.day{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+h2{margin:4px 0 6px;font-size:1.2rem}
+h3{margin:16px 0 6px;font-size:1rem}
+.meta{color:var(--muted);font-size:.88rem}
+ul,ol{padding-left:20px;margin:6px 0}
+li{margin:3px 0}
+details summary{cursor:pointer;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary .more{color:var(--accent);font-size:.85rem;font-weight:600}
+details[open] summary .more{display:none}
+.tip{background:var(--accent-soft);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:.92rem}
+.weeksel{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.weeksel select{flex:1;font:inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+.check:last-child{border-bottom:0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex:none}
+.check.done span{text-decoration:line-through;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;padding:8px 12px;border-radius:10px;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+.empty{color:var(--muted);text-align:center;padding:40px 0}
+footer{max-width:760px;margin:0 auto;padding:8px 16px 32px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>🍲 Cenas en casa</h1>
+  <div class="sub" id="familia"></div>
+</header>
+<nav><div class="wrap">
+  <button data-tab="hoy" class="on">Hoy</button>
+  <button data-tab="semana">Semana</button>
+  <button data-tab="compra">Compra</button>
+</div></nav>
+<main id="app"><div class="empty">Cargando menú…</div></main>
+<footer>Las marcas de la lista de la compra se guardan en este dispositivo.</footer>
+
+<script>
+const DIAS=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const MESES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const parse=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const nice=s=>{const d=parse(s);return DIAS[d.getDay()]+" "+d.getDate()+" "+MESES[d.getMonth()]};
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+let data,semIdx=0,tab=store.get("tab")||"hoy";
+const today=iso(new Date());
+
+function pickWeek(){
+  const s=data.semanas;
+  let i=s.findIndex(w=>w.dias.some(d=>d.fecha===today));
+  if(i<0){ // próxima semana futura o, si no, la última
+    i=s.findIndex(w=>w.lunes>today);
+    if(i<0) i=s.length-1;
+  }
+  return i;
+}
+
+function receta(d,open){
+  return `<details ${open?"open":""}><summary>
+    <div class="day">${esc(nice(d.fecha))}${d.fecha===today?" · hoy":""}</div>
+    <h2>${esc(d.plato)}</h2>
+    <span class="tag">${esc(d.proteina)}</span><span class="meta">⏱ ${esc(d.tiempo)}</span>
+    <div><span class="more">Ver receta ▾</span></div>
+  </summary>
+    <p class="meta">${esc(d.porque)}</p>
+    <h3>Ingredientes</h3><ul>${d.ingredientes.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+    <h3>Pasos Thermomix TM31</h3><ol>${d.pasos.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
+    ${d.truco?`<div class="tip">👧 <b>Truco niños:</b> ${esc(d.truco)}</div>`:""}
+  </details>`;
+}
+
+function weekSelector(){
+  if(data.semanas.length<2) return "";
+  return `<div class="weeksel"><select id="sem">${data.semanas.map((w,i)=>`<option value="${i}" ${i===semIdx?"selected":""}>${esc(w.titulo)}</option>`).join("")}</select></div>`;
+}
+
+function render(){
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+  const w=data.semanas[semIdx], app=$("#app");
+  if(tab==="hoy"){
+    const d=w.dias.find(x=>x.fecha===today);
+    if(d){
+      app.innerHTML=`<div class="card today">${receta(d,true)}</div>
+        <div class="card"><b>🍎 Postre:</b> ${esc(w.postre)}</div>`;
+    }else{
+      const next=w.dias.find(x=>x.fecha>today);
+      app.innerHTML=`<div class="card"><p>No hay cena planificada para hoy.</p>${next?`<p class="meta">Próxima cena planificada:</p>${receta(next,false)}`:`<p class="meta">Pídele a Claude el menú de la semana que viene.</p>`}</div>`;
+    }
+  }else if(tab==="semana"){
+    app.innerHTML=weekSelector()+`<div class="card"><b>${esc(w.titulo)}</b><div class="meta">⚖️ ${esc(w.balance)}</div></div>`+
+      w.dias.map(d=>`<div class="card ${d.fecha===today?"today":""}">${receta(d,false)}</div>`).join("")+
+      `<div class="card"><b>🍎 Postre:</b> ${esc(w.postre)}</div>`;
+  }else{
+    const key="compra-"+w.lunes, marks=store.get(key)||{};
+    app.innerHTML=weekSelector()+`<div class="row"><button class="btn" id="limpiar">Desmarcar todo</button><button class="btn" id="copiar">Copiar lista</button></div>`+
+      w.compra.map((s,si)=>`<div class="card"><h3 style="margin-top:0">${esc(s.seccion)}</h3>${
+        s.items.map((it,ii)=>{const id=si+"-"+ii;return `<label class="check ${marks[id]?"done":""}"><input type="checkbox" data-id="${id}" ${marks[id]?"checked":""}><span>${esc(it)}</span></label>`}).join("")
+      }</div>`).join("")+
+      `<div class="card"><b>✅ Revisa que tienes en casa:</b> ${esc(w.revisa)}</div>`;
+    app.querySelectorAll("input[type=checkbox]").forEach(c=>c.onchange=()=>{
+      marks[c.dataset.id]=c.checked; store.set(key,marks); c.parentElement.classList.toggle("done",c.checked);
+    });
+    $("#limpiar").onclick=()=>{store.set(key,{});render()};
+    $("#copiar").onclick=async()=>{
+      const txt=w.titulo+"\n\n"+w.compra.map(s=>s.seccion+"\n"+s.items.map(i=>"- "+i).join("\n")).join("\n\n")+"\n\nRevisa en casa: "+w.revisa;
+      try{await navigator.clipboard.writeText(txt);$("#copiar").textContent="¡Copiada!"}catch(e){$("#copiar").textContent="No se pudo copiar"}
+    };
+  }
+  const sel=$("#sem"); if(sel) sel.onchange=()=>{semIdx=+sel.value;render()};
+}
+
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;store.set("tab",tab);render();window.scrollTo(0,0)});
+
+fetch("menus.json?v="+Date.now()).then(r=>r.json()).then(j=>{
+  data=j; $("#familia").textContent=j.familia||"";
+  data.semanas.sort((a,b)=>a.lunes.localeCompare(b.lunes));
+  semIdx=pickWeek(); render();
+}).catch(()=>{$("#app").innerHTML='<div class="empty">No se pudo cargar el menú.</div>'});
+</script>
+</body>
+</html>
