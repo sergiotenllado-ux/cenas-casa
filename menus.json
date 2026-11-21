@@ -3,7 +3,7 @@
   "semanas": [
     {
       "lunes": "2026-11-16",
-      "titulo": "Semana del 16 al 22 de noviembre (sin viernes ni sábado)",
+      "titulo": "Semana del 16 al 22 de noviembre (sin cena viernes ni sábado · comida del sábado)",
       "balance": "5 cenas · 1 pescado + 1 marisco · 1 huevo · 2 carnes blancas · verdura en todas las cenas · 0 fritos",
       "postre": "Fruta de temporada (mandarina, manzana, pera, kiwi, caqui) o yogur natural",
       "dias": [
@@ -102,6 +102,35 @@
           "truco": "Albóndigas del tamaño de una nuez para el de 4 años. La zanahoria «desaparece» en la salsa."
         },
         {
+          "fecha": "2026-11-21",
+          "plato": "🍽️ Comida: Arroz meloso de pollo y verduras",
+          "proteina": "Pollo",
+          "tiempo": "15 min activos · 40 min total",
+          "porque": "Comida de sábado en un solo vaso: aprovecha el arroz y los guisantes que hay en casa, con pollo y verdura. Meloso y suave para los niños.",
+          "ingredientes": [
+            "400 g contramuslo de pollo deshuesado en dados pequeños",
+            "280 g arroz redondo (de casa)",
+            "150 g guisantes congelados (de casa)",
+            "2 zanahorias en dados pequeños (de casa)",
+            "1 cebolla",
+            "½ pimiento rojo",
+            "1 diente de ajo (de casa)",
+            "40 g aceite de oliva virgen extra",
+            "800 g caldo de pollo (brick de 1 l)",
+            "1 cdta pimentón dulce y una pizca de colorante o azafrán",
+            "Sal"
+          ],
+          "pasos": [
+            "Cebolla, pimiento rojo y ajo en trozos: 4 s / vel 4. Añadir el aceite: 8 min / Varoma / vel 1, sin cubilete.",
+            "Añadir el pollo salado: 5 min / Varoma / giro izquierda / vel cuchara.",
+            "Añadir la zanahoria, los guisantes (sin descongelar), el pimentón y el colorante: 2 min / Varoma / giro izquierda / vel cuchara.",
+            "Añadir el arroz: 2 min / 100° / giro izquierda / vel cuchara.",
+            "Calentar el caldo y añadirlo con sal: 14 min / 100° / giro izquierda / vel cuchara, con el cestillo encima en lugar del cubilete para que no salpique.",
+            "Volcar en una fuente y dejar reposar 5 min antes de servir: termina de hacerse y queda meloso."
+          ],
+          "truco": "Para el pequeño, el pollo bien picadito y un chorrito de limón. Si queda espeso al recalentar, un poco de caldo caliente."
+        },
+        {
           "fecha": "2026-11-22",
           "plato": "Tortilla de patata y calabacín + ensalada de tomate",
           "proteina": "Huevo",
@@ -177,6 +206,15 @@
           "seccion": "🍞 Panadería",
           "items": [
             "Pan integral: 1 hogaza o 1 barra (miércoles y jueves)"
+          ]
+        },
+        {
+          "seccion": "🛒 Para la comida del sábado 21",
+          "items": [
+            "Contramuslo de pollo deshuesado 400 g",
+            "Cebolla 1",
+            "Pimiento rojo 1 (usas ½; la otra mitad, a la ensalada del lunes)",
+            "Caldo de pollo: brick de 1 l (usas 800 g)"
           ]
         }
       ],
