@@ -68,7 +68,7 @@ footer{max-width:760px;margin:0 auto;padding:8px 16px 32px;color:var(--muted);fo
   <button data-tab="compra">Compra</button>
 </div></nav>
 <main id="app"><div class="empty">Cargando menú…</div></main>
-<footer>Las marcas de la lista y lo que añadas en «Mis cosas» se guardan en este dispositivo.</footer>
+<footer>Las casillas marcadas se guardan en cada móvil. Con la lista compartida activada, lo que añades lo ve toda la familia.</footer>
 
 <script>
 const DIAS=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
@@ -112,6 +112,37 @@ function weekSelector(){
   return `<div class="weeksel"><select id="sem">${data.semanas.map((w,i)=>`<option value="${i}" ${i===semIdx?"selected":""}>${esc(w.titulo)}</option>`).join("")}</select></div>`;
 }
 
+// ---- Lista compartida: guarda en menus.json del repo con la llave (token) guardada solo en este móvil ----
+const REPO="sergiotenllado-ux/cenas-casa", FILE="menus.json";
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.split("\n").join("")),c=>c.charCodeAt(0)));
+const b64e=s=>{const b=new TextEncoder().encode(s);let r="";for(let i=0;i<b.length;i+=32768)r+=String.fromCharCode.apply(null,b.subarray(i,i+32768));return btoa(r)};
+const otrosDe=w=>{let s=w.compra.find(x=>x.seccion.includes("Otros"));if(!s){s={seccion:"🧻 Otros",items:[]};w.compra.push(s)}return s};
+async function ghLeer(tk){
+  const r=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}?ref=main&t=${Date.now()}`,{headers:{Authorization:"Bearer "+tk,Accept:"application/vnd.github+json"},cache:"no-store"});
+  if(r.status===401) throw new Error("La llave no es válida o ha caducado.");
+  if(r.status===403||r.status===404) throw new Error("La llave no tiene permiso sobre el repositorio cenas-casa.");
+  if(!r.ok) throw new Error("GitHub respondió "+r.status);
+  const f=await r.json(); return {sha:f.sha,json:JSON.parse(b64d(f.content))};
+}
+async function ghCambiar(lunes,cambio,mensaje){
+  const tk=store.get("gh-token"); if(!tk) throw new Error("falta la llave");
+  for(let intento=0;intento<3;intento++){
+    const {sha,json}=await ghLeer(tk);
+    const w=json.semanas.find(s=>s.lunes===lunes); if(!w) throw new Error("no encuentro esa semana en la web");
+    cambio(w);
+    const p=await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`,{method:"PUT",
+      headers:{Authorization:"Bearer "+tk,Accept:"application/vnd.github+json"},
+      body:JSON.stringify({message:mensaje,content:b64e(JSON.stringify(json,null,2)+"\n"),sha,branch:"main"})});
+    if(p.ok){
+      json.semanas.sort((a,b)=>a.lunes.localeCompare(b.lunes));
+      data=json; semIdx=Math.max(0,data.semanas.findIndex(s=>s.lunes===lunes)); return;
+    }
+    if(p.status===401||p.status===403||p.status===404) throw new Error("la llave no tiene permiso de escritura ("+p.status+")");
+    if(p.status!==409&&p.status!==422) throw new Error("GitHub respondió "+p.status);
+  }
+  throw new Error("alguien estaba guardando a la vez; inténtalo de nuevo");
+}
+
 function render(){
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
   const w=data.semanas[semIdx], app=$("#app");
@@ -129,17 +160,21 @@ function render(){
       w.dias.map(d=>`<div class="card ${d.fecha===today?"today":""}">${receta(d,false)}</div>`).join("")+
       `<div class="card"><b>🍎 Postre:</b> ${esc(w.postre)}</div>`;
   }else{
-    const key="compra-"+w.lunes, marks=store.get(key)||{};
+    const key="compra2-"+w.lunes, marks=store.get(key)||{};
     const xkey="extra-"+w.lunes, extras=store.get(xkey)||[];
+    const tk=!!store.get("gh-token");
     app.innerHTML=weekSelector()+`<div class="row"><button class="btn" id="limpiar">Desmarcar todo</button><button class="btn" id="copiar">Copiar lista</button></div>`+
-      `<div class="card"><h3 style="margin-top:0">📝 Mis cosas</h3>
-        <form id="addf" class="addrow"><input id="addi" placeholder="Añadir (p. ej. papel de albal, detergente…)" maxlength="80" enterkeyhint="done" autocomplete="off"><button class="btn" type="submit">Añadir</button></form>
+      `<div class="card"><h3 style="margin-top:0">➕ Añadir a la lista</h3>
+        <form id="addf" class="addrow"><input id="addi" placeholder="Ej.: papel de albal, detergente…" maxlength="80" enterkeyhint="done" autocomplete="off"><button class="btn" type="submit" id="addb">Añadir</button></form>
+        <div class="meta" id="addmsg">${tk
+          ?`👨‍👩‍👧‍👦 Lista compartida activada: lo que añadas lo verá toda la familia (aparece en la sección 🧻 Otros). <a href="#" id="ghoff">Desactivar en este móvil</a>`
+          :`📱 Ahora se guarda solo en este móvil. <a href="#" id="ghon">🔑 Activar lista compartida</a>`}</div>
+        ${extras.length?`<div class="meta" style="margin-top:8px">Solo en este móvil:</div>`:""}
         ${extras.map((x,i)=>`<div class="check ${x.done?"done":""}"><input type="checkbox" data-x="${i}" ${x.done?"checked":""}><span>${esc(x.t)}</span><button class="del" data-del="${i}" aria-label="Quitar ${esc(x.t)}">✕</button></div>`).join("")}
-        ${extras.length?"":`<div class="meta">Lo que añadas aquí se guarda en este móvil.</div>`}
       </div>`+
-      w.compra.map((s,si)=>`<div class="card"><h3 style="margin-top:0">${esc(s.seccion)}</h3>${
-        s.items.map((it,ii)=>{const id=si+"-"+ii;return `<label class="check ${marks[id]?"done":""}"><input type="checkbox" data-id="${id}" ${marks[id]?"checked":""}><span>${esc(it)}</span></label>`}).join("")
-      }</div>`).join("")+
+      w.compra.map(s=>{const esOtros=s.seccion.includes("Otros");return `<div class="card"><h3 style="margin-top:0">${esc(s.seccion)}</h3>${
+        s.items.map(it=>{const id=s.seccion+"|"+it;return `<div class="check ${marks[id]?"done":""}"><input type="checkbox" data-id="${esc(id)}" ${marks[id]?"checked":""}><span>${esc(it)}</span>${esOtros&&tk?`<button class="del" data-sdel="${esc(it)}" aria-label="Quitar ${esc(it)}">✕</button>`:""}</div>`}).join("")
+      }</div>`}).join("")+
       `<div class="card"><b>✅ Revisa que tienes en casa:</b> ${esc(w.revisa)}</div>`;
     app.querySelectorAll("input[data-id]").forEach(c=>c.onchange=()=>{
       marks[c.dataset.id]=c.checked; store.set(key,marks); c.parentElement.classList.toggle("done",c.checked);
@@ -148,10 +183,30 @@ function render(){
       extras[+c.dataset.x].done=c.checked; store.set(xkey,extras); c.parentElement.classList.toggle("done",c.checked);
     });
     app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{extras.splice(+b.dataset.del,1);store.set(xkey,extras);render()});
-    $("#addf").onsubmit=e=>{
+    const msg=t=>{$("#addmsg").textContent=t};
+    $("#addf").onsubmit=async e=>{
       e.preventDefault(); const t=$("#addi").value.trim(); if(!t) return;
-      extras.push({t,done:false}); store.set(xkey,extras); render(); $("#addi").focus();
+      if(!store.get("gh-token")){extras.push({t,done:false}); store.set(xkey,extras); render(); $("#addi").focus(); return;}
+      $("#addb").disabled=true; msg("Guardando en la lista de la familia…");
+      try{
+        await ghCambiar(w.lunes,ww=>{const s=otrosDe(ww); if(!s.items.includes(t)) s.items.push(t)},"Lista de la compra: añadir "+t);
+        render(); $("#addi").focus(); msg("✅ Añadido. Los demás lo verán al recargar la web (tarda 1-2 min).");
+      }catch(err){$("#addb").disabled=false; msg("❌ No se pudo guardar: "+err.message);}
     };
+    app.querySelectorAll("[data-sdel]").forEach(b=>b.onclick=async()=>{
+      const t=b.dataset.sdel; if(!confirm("¿Quitar «"+t+"» de la lista de toda la familia?")) return;
+      b.disabled=true; msg("Quitando…");
+      try{await ghCambiar(w.lunes,ww=>{const s=otrosDe(ww); s.items=s.items.filter(i=>i!==t); if(!s.items.length) ww.compra=ww.compra.filter(x=>x!==s)},"Lista de la compra: quitar "+t); render(); msg("✅ Quitado.");}
+      catch(err){b.disabled=false; msg("❌ No se pudo quitar: "+err.message);}
+    });
+    const on=$("#ghon"); if(on) on.onclick=async e=>{
+      e.preventDefault();
+      const t=(prompt("Pega aquí la llave de GitHub (empieza por github_pat_). Solo se guarda en este móvil.")||"").trim(); if(!t) return;
+      msg("Comprobando la llave…");
+      try{await ghLeer(t); store.set("gh-token",t); render(); msg("✅ Lista compartida activada en este móvil.");}
+      catch(err){msg("❌ "+err.message);}
+    };
+    const off=$("#ghoff"); if(off) off.onclick=e=>{e.preventDefault(); if(confirm("¿Quitar la llave de este móvil? Lo ya añadido se queda en la lista.")){try{localStorage.removeItem("gh-token")}catch(_){} render();}};
     $("#limpiar").onclick=()=>{store.set(key,{});extras.forEach(x=>x.done=false);store.set(xkey,extras);render()};
     $("#copiar").onclick=async()=>{
       const mias=extras.length?"📝 Mis cosas\n"+extras.map(x=>"- "+x.t).join("\n")+"\n\n":"";
