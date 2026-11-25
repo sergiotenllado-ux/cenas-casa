@@ -225,7 +225,7 @@
     {
       "lunes": "2026-11-23",
       "titulo": "Semana del 23 al 29 de noviembre (sin viernes ni sábado)",
-      "balance": "5 cenas · 2 pescados (1 azul) + marisco · 1 huevo · 1 pollo · 1 cerdo · verdura en todas · 2 freidora de aire · 3 horno · sin pasta ni arroz · 0 fritos",
+      "balance": "5 cenas · 1 pescado azul + marisco · 1 huevo · 2 carnes blancas (pollo, pavo) · 1 cerdo · verdura en todas · 2 freidora de aire · 3 horno · sin pasta ni arroz · 0 fritos",
       "postre": "Fruta de temporada (mandarina, manzana, pera, kiwi, caqui) o yogur natural",
       "dias": [
         {
@@ -294,23 +294,27 @@
         },
         {
           "fecha": "2026-11-26",
-          "plato": "Bacalao con costra de pan y perejil al horno + puré de patata + judías verdes salteadas",
-          "proteina": "Pescado blanco",
-          "tiempo": "15 min activos · 45 min total",
-          "porque": "Pescado blanco sin espinas con un puré casero de la TM31, terminando lo que queda de pan rallado, parmesano y judías.",
+          "plato": "Pastel de pavo y verduras con puré gratinado al horno + judías verdes salteadas",
+          "proteina": "Pavo",
+          "tiempo": "20 min activos · 55 min total",
+          "porque": "Carne blanca picada con verdura bajo un puré casero de la TM31, gratinado con parmesano: el clásico «pastel de carne» en versión ligera, perfecto para los niños.",
           "ingredientes": [
-            "4 lomos de bacalao fresco o desalado, sin espinas (~600 g; vale congelado)",
-            "Costra: 50 g pan rallado (de casa), 30 g parmesano (de casa), perejil, 1 diente de ajo, 30 g aceite",
+            "500 g carne picada de pavo",
             "Puré: 800 g patata, 400 g leche, 200 g agua, 30 g aceite de oliva, sal",
+            "1 cebolla, 1 diente de ajo, 30 g aceite de oliva",
+            "100 g tomate triturado (del bote del domingo)",
+            "100 g guisantes congelados (de casa)",
+            "Gratinado: 30 g parmesano y 50 g pan rallado (de casa)",
             "300 g judías verdes congeladas (de casa), 1 diente de ajo"
           ],
           "pasos": [
-            "TM31 costra: parmesano, ajo y perejil 10 s / vel 10; añadir pan rallado y aceite 5 s / vel 4. Reservar.",
-            "Puré: poner la mariposa. Patata en trozos, leche, agua y sal: 30 min / 100° / vel 1. Añadir el aceite: 20 s / vel 3.",
-            "Mientras: bacalao en una bandeja, la costra por encima apretando. Horno 200° · 12-15 min.",
-            "Judías: saltear 6-8 min en sartén con un ajo laminado y un poco de aceite."
+            "TM31 gratinado: rallar el parmesano 10 s / vel 10, añadir el pan rallado 3 s / vel 5. Reservar.",
+            "Relleno: cebolla y ajo 5 s / vel 5 + aceite 7 min / Varoma / vel 1. Añadir el pavo salado: 6 min / Varoma / giro izquierda / vel cuchara. Añadir el tomate y los guisantes: 6 min / 100° / giro izquierda / vel cuchara. Pasar a una fuente de horno y extender.",
+            "Puré (sin lavar el vaso, basta un enjuague): poner la mariposa. Patata en trozos, leche, agua y sal: 30 min / 100° / vel 1. Añadir el aceite: 20 s / vel 3.",
+            "Cubrir el relleno con el puré, espolvorear el parmesano con pan rallado. Horno 200° · 12 min y 3 min de grill hasta que se dore.",
+            "Mientras: saltear las judías 6-8 min con un ajo laminado y un poco de aceite."
           ],
-          "truco": "Para el pequeño, el bacalao desmigado dentro del puré (tipo «pastel de pescado»)."
+          "truco": "Cortado en cuadrados como si fuera una tarta. Si sobra, al día siguiente se recalienta muy bien."
         },
         {
           "fecha": "2026-11-29",
@@ -339,6 +343,7 @@
           "seccion": "🥬 Frutería",
           "items": [
             "Patatas: bolsa de 2 kg (usas ~550 g; el resto sale de casa)",
+            "Cebolla 1 · jueves",
             "Pimiento rojo 1",
             "Limón 1",
             "Lechuga 1 (si la de casa está mustia)",
@@ -350,14 +355,14 @@
         {
           "seccion": "🐟 Pescadería",
           "items": [
-            "Salmón: 4 lomos sin piel ~550 g · martes (comprar el lunes o congelado)",
-            "Bacalao: 4 lomos sin espinas ~600 g (congelado o desalado) · jueves"
+            "Salmón: 4 lomos sin piel ~550 g · martes (comprar el lunes o congelado)"
           ]
         },
         {
           "seccion": "🍗 Carnicería",
           "items": [
-            "Pechuga de pollo 500 g · miércoles"
+            "Pechuga de pollo 500 g · miércoles",
+            "Carne picada de pavo 500 g · jueves"
           ]
         },
         {
@@ -371,7 +376,7 @@
         {
           "seccion": "🥫 Despensa",
           "items": [
-            "Tomate triturado: 1 bote de 400 g (usas 200 g)"
+            "Tomate triturado: 1 bote de 400 g (usas 300 g: jueves y domingo)"
           ]
         },
         {
@@ -390,11 +395,17 @@
             "Cebollas 2",
             "Zanahorias 5 de las 7",
             "Judías verdes congeladas 600 g · martes y jueves",
-            "Guisantes congelados 400 g · miércoles",
+            "Guisantes congelados 500 g · miércoles y jueves",
             "Parmesano ~60 g · miércoles y jueves",
             "Pan rallado ~130 g · miércoles y jueves",
             "Costillar de cerdo ~1 kg · domingo",
             "Ajo, perejil, ½ lechuga, ½ limón"
+          ]
+        },
+        {
+          "seccion": "🧻 Otros",
+          "items": [
+            "Papel de aluminio (Albal)"
           ]
         }
       ],

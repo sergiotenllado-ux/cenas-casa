@@ -41,11 +41,16 @@ details summary .more{color:var(--accent);font-size:.85rem;font-weight:600}
 details[open] summary .more{display:none}
 .tip{background:var(--accent-soft);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:.92rem}
 .weeksel{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-.weeksel select{flex:1;font:inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.weeksel select{flex:1;min-width:0;width:100%;text-overflow:ellipsis;font:inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .check{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--line);cursor:pointer}
 .check:last-child{border-bottom:0}
 .check input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex:none}
 .check.done span{text-decoration:line-through;color:var(--muted)}
+.check span{flex:1}
+.addrow{display:flex;gap:8px;margin:4px 0 8px}
+.addrow input{flex:1;min-width:0;font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.addrow button{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.del{border:0;background:transparent;color:var(--muted);font-size:1.05rem;cursor:pointer;padding:0 6px;line-height:1}
 .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;padding:8px 12px;border-radius:10px;cursor:pointer}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
 .empty{color:var(--muted);text-align:center;padding:40px 0}
@@ -63,7 +68,7 @@ footer{max-width:760px;margin:0 auto;padding:8px 16px 32px;color:var(--muted);fo
   <button data-tab="compra">Compra</button>
 </div></nav>
 <main id="app"><div class="empty">Cargando menú…</div></main>
-<footer>Las marcas de la lista de la compra se guardan en este dispositivo.</footer>
+<footer>Las marcas de la lista y lo que añadas en «Mis cosas» se guardan en este dispositivo.</footer>
 
 <script>
 const DIAS=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
@@ -125,17 +130,32 @@ function render(){
       `<div class="card"><b>🍎 Postre:</b> ${esc(w.postre)}</div>`;
   }else{
     const key="compra-"+w.lunes, marks=store.get(key)||{};
+    const xkey="extra-"+w.lunes, extras=store.get(xkey)||[];
     app.innerHTML=weekSelector()+`<div class="row"><button class="btn" id="limpiar">Desmarcar todo</button><button class="btn" id="copiar">Copiar lista</button></div>`+
+      `<div class="card"><h3 style="margin-top:0">📝 Mis cosas</h3>
+        <form id="addf" class="addrow"><input id="addi" placeholder="Añadir (p. ej. papel de albal, detergente…)" maxlength="80" enterkeyhint="done" autocomplete="off"><button class="btn" type="submit">Añadir</button></form>
+        ${extras.map((x,i)=>`<div class="check ${x.done?"done":""}"><input type="checkbox" data-x="${i}" ${x.done?"checked":""}><span>${esc(x.t)}</span><button class="del" data-del="${i}" aria-label="Quitar ${esc(x.t)}">✕</button></div>`).join("")}
+        ${extras.length?"":`<div class="meta">Lo que añadas aquí se guarda en este móvil.</div>`}
+      </div>`+
       w.compra.map((s,si)=>`<div class="card"><h3 style="margin-top:0">${esc(s.seccion)}</h3>${
         s.items.map((it,ii)=>{const id=si+"-"+ii;return `<label class="check ${marks[id]?"done":""}"><input type="checkbox" data-id="${id}" ${marks[id]?"checked":""}><span>${esc(it)}</span></label>`}).join("")
       }</div>`).join("")+
       `<div class="card"><b>✅ Revisa que tienes en casa:</b> ${esc(w.revisa)}</div>`;
-    app.querySelectorAll("input[type=checkbox]").forEach(c=>c.onchange=()=>{
+    app.querySelectorAll("input[data-id]").forEach(c=>c.onchange=()=>{
       marks[c.dataset.id]=c.checked; store.set(key,marks); c.parentElement.classList.toggle("done",c.checked);
     });
-    $("#limpiar").onclick=()=>{store.set(key,{});render()};
+    app.querySelectorAll("input[data-x]").forEach(c=>c.onchange=()=>{
+      extras[+c.dataset.x].done=c.checked; store.set(xkey,extras); c.parentElement.classList.toggle("done",c.checked);
+    });
+    app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{extras.splice(+b.dataset.del,1);store.set(xkey,extras);render()});
+    $("#addf").onsubmit=e=>{
+      e.preventDefault(); const t=$("#addi").value.trim(); if(!t) return;
+      extras.push({t,done:false}); store.set(xkey,extras); render(); $("#addi").focus();
+    };
+    $("#limpiar").onclick=()=>{store.set(key,{});extras.forEach(x=>x.done=false);store.set(xkey,extras);render()};
     $("#copiar").onclick=async()=>{
-      const txt=w.titulo+"\n\n"+w.compra.map(s=>s.seccion+"\n"+s.items.map(i=>"- "+i).join("\n")).join("\n\n")+"\n\nRevisa en casa: "+w.revisa;
+      const mias=extras.length?"📝 Mis cosas\n"+extras.map(x=>"- "+x.t).join("\n")+"\n\n":"";
+      const txt=w.titulo+"\n\n"+mias+w.compra.map(s=>s.seccion+"\n"+s.items.map(i=>"- "+i).join("\n")).join("\n\n")+"\n\nRevisa en casa: "+w.revisa;
       try{await navigator.clipboard.writeText(txt);$("#copiar").textContent="¡Copiada!"}catch(e){$("#copiar").textContent="No se pudo copiar"}
     };
   }
